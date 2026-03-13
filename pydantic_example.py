@@ -69,3 +69,124 @@ print(student.name)
 print(student.age)
 print(student.college)
 print(student.marks)
+
+# Making use of Email Validation
+# You need to extract the Emailstr from the pydantic to make use of email 
+
+from pydantic import BaseModel, Field, EmailStr
+
+class Student(BaseModel):
+    name: str
+    age: int = Field(gt=0,le=100)
+    college: str = 'Masai'
+    email: EmailStr
+    marks: float
+
+student_info = {'name':'Sanskriti', 'age':23, 'email':'sanskritijain47@gmail.com', 'marks':'99.9'}
+
+student = Student(**student_info)
+print(student)
+
+# If you want to take some URL, AnyUrl is used, Httpsurl
+
+from pydantic import BaseModel, Field, EmailStr, AnyUrl, HttpUrl
+
+class Student(BaseModel):
+    name: str
+    age: int = Field(gt=0,le=100)
+    college: str = 'Masai'
+    email: EmailStr
+    marks: float
+    url: HttpUrl
+
+student_info = {'name':'Sanskriti', 'age':23, 'email':'sanskritijain47@gmail.com', 'marks':'99.9', 'url': 'https://pin.it/kk'}
+
+student = Student(**student_info)
+print(student.url)
+
+# Making use of default 
+class Student(BaseModel):
+    name: str
+    age: int = Field(gt=0,le=100)
+    college: str = 'Masai'
+    email: EmailStr
+    marks: float = Field(default = 10)
+
+student_info = {'name':'Sanskriti', 'age':23, 'email':'sanskritijain47@gmail.com',}
+
+student = Student(**student_info)
+print(student)
+
+# If you mention some random field, and that is not present in the class, it will simply ignore it 
+# You can make use of examples and description in the field in order to provide certain example
+
+class Student(BaseModel):
+    name: str
+    age: int = Field(gt=0,le=100)
+    college: str = 'Masai'
+    email: EmailStr = Field(description = "The email looks like this-", examples = "ABC@gmail.com")
+    marks: float = Field(default = 10, description = "Please provide the exact marks.")
+
+student_info = {'name':'Sanskriti', 'age':23, 'email':'sanskritijain47@gmail.com',}
+
+student = Student(**student_info)
+print(student.email)
+print(student.marks)
+
+# Suppose if you want a specific email validation, suppose @gmail.com should be the only accepted email 
+
+from pydantic import BaseModel, Field,  EmailStr, field_validator
+
+class Student(BaseModel):
+    name: str
+    age: int = Field(gt=0,le=100)
+    college: str = 'Masai'
+    email: EmailStr = Field(description = "The email looks like this-", examples = "ABC@gmail.com")
+    marks: float = Field(default = 10, description = "Please provide the exact marks.")
+
+ # This field validator makes sure that the email value belongs to @gmail.com    
+    @field_validator('email')
+    @classmethod
+    def email_validator(cls, value):
+        # in order to get the domain name, we make use of split function
+        domain_name = value.split('@')[-1]
+        if domain_name == '@gmail.com' :
+            print("Valid Domain name")
+
+        else:
+            raise ValueError("Invalid Domain name")
+        
+        return value
+
+student_info = {'name':'Sanskriti', 'age':23, 'email':'sanskritijain47@gmail.com'}
+
+student = Student(**student_info)
+#print(student.email)
+
+#After validating any daya, if you want to convert it into any form. For r.g. in marks, want to calculate total marks and percentage, field validators can be used.
+
+class Student(BaseModel):
+    name: str
+    age: int = Field(gt=0,le=100)
+    college: str 
+    email: EmailStr 
+    marks: float = Field(default = 10, description = "Please provide the exact marks.")
+
+@field_validator("email")
+@classmethod
+def email_validator(cls,value):
+    domain_name = value.split("@")[-1]
+    if domain_name != "masai.com":
+        raise ValueError("Invalid domain")
+    return value 
+
+@field_validator('college')
+@classmethod
+def converting_college_into_lower_case(cls, value):
+    return value.lower()
+
+student_info = {'name': 'Sanskriti', 'age': 23, 'email': 'sanskriti@masai.com', 'college': 'MASAI'}
+
+student = Student(**student_info)
+print(student.email)
+print(student.college)
